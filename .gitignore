@@ -1,15 +1,31 @@
-*.d
-*.pre
-*.p1
-*.lst
-*.sym
-*.obj
-*.o
-*.sdb
-*.obj.dmp
+# Directories
+Debug/
 html/
-debug/
+.metadata/
+Release/ 
 .settings/
-Drivers/
-Middlewares/
+
+# Artifacts
+*.cyclo
+*.d
+*.o
+*.obj
+*.obj.dmp
+*.p1
+*.pre
+*.lst
+*.sdb
+*.su
+*.sym
+
+# Binaries
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+*.out
+
+# Other
 .mxproject
+*.launch
