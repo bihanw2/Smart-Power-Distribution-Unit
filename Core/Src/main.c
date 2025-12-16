@@ -67,7 +67,9 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
-
+uint32_t current_time;
+uint32_t previous_time;
+uint8_t count;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,10 +88,9 @@ static void MX_TIM2_Init(void);
 
 // usb variables
 extern FIFO RX_FIFO;
-uint8_t incomingMessagesRxBuff[64], outcomingMessagesTxBuff[64];
+uint8_t incomingMessagesRxBuff[64], outcomingMessagesTxBuff[64] = "a";
 uint8_t rXbuffPointer;
 bool messageReceived;
-
 USBD_StatusTypeDef myUsbStatus = USBD_OK;
 bool txBusy = false;
 
@@ -102,6 +103,7 @@ bool txBusy = false;
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -147,6 +149,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  //HAL_Delay(5000);
+	  //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_6);  //relay 1
+	  //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);  //relay 2
+	  //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);  //relay 3
+	  //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_4);  //relay 4
+	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);  //relay 5
+	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);  //relay 6
+	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);  //relay 7
+	  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);  //relay 8
+	  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);  //relay 9
+	  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);  //relay 10
 
 	  processIOControl();
 
@@ -165,6 +178,7 @@ int main(void)
 
 	  processTxRoutines();
 
+
   }
   /* USER CODE END 3 */
 }
@@ -178,6 +192,7 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+  RCC_CRSInitTypeDef RCC_CRSInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -211,6 +226,21 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
+  /** Enable the SYSCFG APB clock
+  */
+  __HAL_RCC_CRS_CLK_ENABLE();
+
+  /** Configures CRS
+  */
+  RCC_CRSInitStruct.Prescaler = RCC_CRS_SYNC_DIV1;
+  RCC_CRSInitStruct.Source = RCC_CRS_SYNC_SOURCE_USB;
+  RCC_CRSInitStruct.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
+  RCC_CRSInitStruct.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000,1000);
+  RCC_CRSInitStruct.ErrorLimitValue = 34;
+  RCC_CRSInitStruct.HSI48CalibrationValue = 32;
+
+  HAL_RCCEx_CRSConfig(&RCC_CRSInitStruct);
 }
 
 /**
@@ -462,8 +492,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -538,16 +568,135 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : btn1_Pin */
   GPIO_InitStruct.Pin = btn1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(btn1_GPIO_Port, &GPIO_InitStruct);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_3_IRQn);
+
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief  EXTI line detection callback.
+  * @param  GPIO_Pin Specifies the port pin connected to corresponding EXTI line.
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(GPIO_Pin);
 
+  /* NOTE: This function should not be modified, when the callback is needed,
+            the HAL_GPIO_EXTI_Callback could be implemented in the user file
+   */
+  current_time = HAL_GetTick();
+
+  //Ensuring a 1.5ms debounce for the button (buttons was characterized to bounce for 0.9ms)
+  if (current_time - previous_time > 1.5){
+	  //btn 1 and 9
+	  if (GPIO_Pin == GPIO_PIN_2){
+
+		  //NEEDS PIN MAPPING CHANGES
+
+		  //toggle LED 1
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_15);
+
+		  //Sync Relay 1 with LED 1
+		  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_SET){
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+		  }else{
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+		  }
+
+	  }
+	  //btn 2
+	  else if(GPIO_Pin == GPIO_PIN_11){
+		  //toggle LED 2
+		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_12);
+
+		  //Sync Relay 2 with LED 2
+		  if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_12) == GPIO_PIN_SET){
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+		  }else{
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+		  }
+	  }
+	  //btn 3
+	  else if(GPIO_Pin == GPIO_PIN_0){
+		  //toggle LED 3
+		  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+
+		  //Sync Relay 3 with LED 3
+		  if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET){
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+		  }else{
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+		  }
+	  }
+	  //btn 4
+	  else if(GPIO_Pin == GPIO_PIN_5){
+		  //toggle LED 4
+		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_14);
+
+		  //Sync Relay 4 with LED 4
+		  if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14) == GPIO_PIN_SET){
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
+		  }else{
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
+		  }
+	  }
+	  //btn 5
+	  else if(GPIO_Pin == GPIO_PIN_14){
+		  //toggle LED 5
+		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
+
+		  //Sync Relay 5 with LED 5
+		  if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4) == GPIO_PIN_SET){
+			  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);
+		  }else{
+			  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_SET);
+		  }
+	  }
+	  //btn 6
+	  else if(GPIO_Pin == GPIO_PIN_6){
+		  //toggle LED 6
+		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+
+		  //Sync Relay 6 with LED 6
+		  if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7) == GPIO_PIN_SET){
+			  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+		  }else{
+			  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+		  }
+	  }
+	  //btn 7 and 10
+	  else if(GPIO_Pin == GPIO_PIN_13){
+
+		  //NEEDS PIN MAPPING CHANGES
+
+	  }
+	  //btn 8
+	  else if(GPIO_Pin == GPIO_PIN_8){
+		  //toggle LED 8
+		  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
+
+		  //Sync Relay 8 with LED 8
+		  if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_SET){
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+		  }else{
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+		  }
+	  }
+
+	  previous_time = current_time;
+
+  }
+}
 
 void boardInit(void){
 
@@ -1287,10 +1436,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

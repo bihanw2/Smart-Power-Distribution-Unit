@@ -22,7 +22,7 @@
 #define __STM32F0xx_IT_H
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Private includes ----------------------------------------------------------*/
@@ -51,7 +51,9 @@ void HardFault_Handler(void);
 void SVC_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
+void EXTI2_3_IRQHandler(void);
 void DMA1_Channel1_IRQHandler(void);
+void ADC1_COMP_IRQHandler(void);
 void TIM1_BRK_UP_TRG_COM_IRQHandler(void);
 void TIM2_IRQHandler(void);
 void USB_IRQHandler(void);
