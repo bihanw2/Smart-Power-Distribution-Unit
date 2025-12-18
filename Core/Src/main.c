@@ -18,6 +18,7 @@
 
 
 /*
+/*TEST*/
 This firmware takes control over
 10 ch ADCs
 1 10mS timer
