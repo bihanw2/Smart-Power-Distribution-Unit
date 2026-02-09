@@ -105,7 +105,6 @@ void Error_Handler(void);
 #define led2_GPIO_Port GPIOC
 #define btn1_Pin GPIO_PIN_2
 #define btn1_GPIO_Port GPIOD
-#define btn1_EXTI_IRQn EXTI2_3_IRQn
 #define rly4_Pin GPIO_PIN_4
 #define rly4_GPIO_Port GPIOB
 #define rly3_Pin GPIO_PIN_5
@@ -211,7 +210,7 @@ uint8_t plotCounter;
 
 
 // adc
-uint32_t adcResultsRaw[11];
+uint16_t adcResultsRaw[11];
 bool adcCompletedFlag;
 
 

@@ -11,6 +11,9 @@ RM := rm -rf
 -include sources.mk
 -include USB_DEVICE/Target/subdir.mk
 -include USB_DEVICE/App/subdir.mk
+-include Middlewares/ST/STM32_USB_Device_Library/Core/Src/subdir.mk
+-include Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/subdir.mk
+-include Drivers/STM32F0xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
@@ -61,8 +64,8 @@ all: main-build
 main-build: logicBoard.elf secondary-outputs
 
 # Tool invocations
-logicBoard.elf logicBoard.map: $(OBJS) $(USER_OBJS) C:\Users\micha\Engineering\Fifth_Year\ENEL500\board\Power-Bar-Embedded\STM32F072RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "logicBoard.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"C:\Users\micha\Engineering\Fifth_Year\ENEL500\board\Power-Bar-Embedded\STM32F072RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="logicBoard.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+logicBoard.elf logicBoard.map: $(OBJS) $(USER_OBJS) /home/bihanw2/STM32CubeIDE/board/STM32F072RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "logicBoard.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"/home/bihanw2/STM32CubeIDE/board/STM32F072RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="logicBoard.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

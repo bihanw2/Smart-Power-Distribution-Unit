@@ -94,7 +94,8 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-FIFO RX_FIFO = {.head=0, .tail=0};
+FIFO RX_FIFO;
+FIFO TX_FIFO;
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -150,6 +151,13 @@ USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
 static int8_t CDC_Init_FS(void)
 {
   /* USER CODE BEGIN 3 */
+  /* Initialize FIFOs */
+  RX_FIFO.head = 0;
+  RX_FIFO.tail = 0;
+
+  TX_FIFO.head = 0;
+  TX_FIFO.tail = 0;
+
   /* Set Application Buffers */
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
@@ -259,32 +267,26 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+
+	  uint32_t myL = *Len;
+
+	  CDC_Transmit_FS(Buf, myL);
+
+	 	// add data to FIFO
+	 	while (myL--)
+	 	{
+	 		if (FIFO_INCR(RX_FIFO.head)==RX_FIFO.tail)
+	 		   return USBD_FAIL;  // overrun
+	 		else
+	 		{
+	 			RX_FIFO.data[RX_FIFO.head]=*Buf++;
+	 			RX_FIFO.head=FIFO_INCR(RX_FIFO.head);
+	 		}
+	 	}
+
+
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
-
-
-  uint32_t myL = *Len;
-
-  CDC_Transmit_FS(Buf, myL);
-
-
-
-
-
-
-
- 	// add data to FIFO
- 	while (myL--)
- 	{
- 		if (FIFO_INCR(RX_FIFO.head)==RX_FIFO.tail)
- 		   return USBD_FAIL;  // overrun
- 		else
- 		{
- 			RX_FIFO.data[RX_FIFO.head]=*Buf++;
- 			RX_FIFO.head=FIFO_INCR(RX_FIFO.head);
- 		}
- 	}
-
 
   return (USBD_OK);
 

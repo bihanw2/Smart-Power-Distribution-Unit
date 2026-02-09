@@ -1,0 +1,14 @@
+../Core/Src/main.c:178:6:SystemClock_Config	112	static,ignoring_inline_asm
+../Core/Src/main.c:555:6:boardInit	24	static
+../Core/Src/main.c:684:6:HAL_TIM_PeriodElapsedCallback	0	static
+../Core/Src/main.c:699:6:HAL_ADC_ConvCpltCallback	0	static
+../Core/Src/main.c:733:6:processIOControl	24	static
+../Core/Src/main.c:776:6:process5milliSecondTasks	48	static
+../Core/Src/main.c:911:6:process100microSecondTasks	8	static
+../Core/Src/main.c:963:6:processRxCircularBufferUnload	16	static
+../Core/Src/main.c:1224:6:updatePortStatus	8	static
+../Core/Src/main.c:1241:6:updatePortMaxCurrent	8	static
+../Core/Src/main.c:1005:6:processParse	16	static,ignoring_inline_asm
+../Core/Src/main.c:1256:6:processTxRoutines	16	static
+../Core/Src/main.c:104:5:main	80	static,ignoring_inline_asm
+../Core/Src/main.c:1283:6:Error_Handler	0	static,ignoring_inline_asm
